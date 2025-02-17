@@ -1,0 +1,34 @@
+@startuml uml_seq_diagram_process
+autonumber
+
+participant Producer
+participant Queue
+participant Consumer
+participant Cache
+participant Server
+
+Group Put task
+    Producer ->> Queue : put(task)
+    Opt Queue is full
+        Queue -> Producer : notify when not full
+    end
+end
+
+Group Get task
+    Consumer ->> Queue : get(task)
+    Opt Queue is empty
+        Queue -> Consumer : notify when not empty
+    end
+end
+
+Group Receive data
+    Consumer -> Cache
+
+    Opt Needs to get data from server
+        Consumer ->> Server
+        Server --> Cache
+    end
+
+    Cache ->> Producer
+end
+@enduml
