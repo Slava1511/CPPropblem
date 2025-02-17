@@ -1,3 +1,0 @@
-C:/Users/Viacheslav/Documents/VSProjects/Work/CPPropblem/build/CMakeFiles/cpproblem.dir
-C:/Users/Viacheslav/Documents/VSProjects/Work/CPPropblem/build/CMakeFiles/edit_cache.dir
-C:/Users/Viacheslav/Documents/VSProjects/Work/CPPropblem/build/CMakeFiles/rebuild_cache.dir
