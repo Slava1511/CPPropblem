@@ -7,28 +7,31 @@ participant Consumer
 participant Cache
 participant Server
 
+Group ThreadPool
 Group Put task
+    Producer ->> Cache: check Cache
+    Opt Cache contains task with such id
+        Producer -> Producer : proceed to the next task
+    end
     Producer ->> Queue : put(task)
-    Opt Queue is full
-        Queue -> Producer : notify when not full
-    end
 end
 
-Group Get task
-    Consumer ->> Queue : get(task)
-    Opt Queue is empty
-        Queue -> Consumer : notify when not empty
-    end
+Opt Task was added to Queue
+        Queue -> Consumer : notify
 end
 
-Group Receive data
-    Consumer -> Cache
+Opt Queue is NOT empty
+        Consumer ->> Queue : get(task)
+end
 
-    Opt Needs to get data from server
-        Consumer ->> Server
-        Server --> Cache
-    end
+Group Caching
+Consumer -> Cache : check Cache
+opt Cahce does NOT contain data with such task id
+  Consumer ->> Server : make a server request
+  Server --> Consumer : receive response
+  Consumer ->> Cache : save it to cache
+end
 
-    Cache ->> Producer
+end
 end
 @enduml
