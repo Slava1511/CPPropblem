@@ -26,7 +26,7 @@ end
 
 Group Caching
 Consumer -> Cache : check Cache
-opt Cahce does NOT contain data with such task id
+opt Cache does NOT contain data with such task id
   Consumer ->> Server : make a server request
   Server --> Consumer : receive response
   Consumer ->> Cache : save it to cache
