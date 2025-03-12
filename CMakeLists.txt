@@ -4,8 +4,16 @@ project(cpproblem CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(cpproblem 
-    "src/main.cpp"
-    "src/consumer_producer.h"
+  "src/common.h"
+  "src/consumer.h"
+  "src/logger.h"
+  "src/main.cpp"
+  "src/manager.h"
+  "src/my_manager.h"
+  "src/producer.h"
+  "src/task.h"
+  "src/thread_safe_map.h"
+  "src/thread_safe_queue.h"
 )
 
 if(MSVC)

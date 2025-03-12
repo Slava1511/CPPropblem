@@ -2,33 +2,36 @@
 autonumber
 
 participant Producer
-participant Queue
 participant Consumer
-participant Cache
-participant Server
+participant Manager
 
-Group Put task
-    Producer ->> Queue : put(task)
-    Opt Queue is full
-        Queue -> Producer : notify when not full
+Group Add task (loop)
+    Producer ->> Manager : AddTask
+    return flag (task was added or not)
+    Opt Task was NOT added
+        Producer -> Producer : wait
     end
 end
 
-Group Get task
-    Consumer ->> Queue : get(task)
-    Opt Queue is empty
-        Queue -> Consumer : notify when not empty
+Group Get task (loop)
+    Consumer ->> Manager : GetTask
+    Opt Fail to get task
+        Consumer -> Consumer : wait
     end
 end
 
-Group Receive data
-    Consumer -> Cache
+Group Calculate and Save data
+    Consumer ->> Manager : CalculateTask
+    return answer
 
-    Opt Needs to get data from server
-        Consumer ->> Server
-        Server --> Cache
+    Consumer ->> Manager : AddValue
+end
+
+Group Retrieve data from cache (loop)
+    Producer ->> Manager : GetValue
+    return value (null value if there is no value in cache)
+    Opt null value
+        Producer -> Producer : wait
     end
-
-    Cache ->> Producer
 end
 @enduml
