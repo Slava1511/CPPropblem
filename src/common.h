@@ -3,27 +3,20 @@
 #include "thread_safe_queue.h"
 #include "thread_safe_map.h"
 #include "logger.h"
-#include "task.h"
 
-#include <thread>
-#include <chrono>
+#include <array>
+#include <variant>
 
-class Server {
-public:
-    // server very long operation
-    static int Compute(int value) {
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        return value * value;
-    }
+struct NoSolution{};
+struct OneRootSolution {
+    double root_{ 0. };
 };
+struct TwoRootSolution {
+    double root1_{ 0. };
+    double root2_{ 0. };
+};
+struct InfiniteNumberOfRoots { };
 
-
-static constexpr auto SLEEP_TIME = std::chrono::microseconds(15);
-
-static void little_sleep(std::chrono::microseconds ms) {
-    const auto start = std::chrono::high_resolution_clock::now();
-    const auto end = start + ms;
-    do {
-        std::this_thread::yield();
-    } while (std::chrono::high_resolution_clock::now() < end);
-}
+using Task = std::array<double, 3u>;
+using Ticket = int;
+using Result = std::variant<NoSolution, OneRootSolution, TwoRootSolution, InfiniteNumberOfRoots>;

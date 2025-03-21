@@ -1,6 +1,9 @@
 #include <iostream>
 #include "logger.h"
-#include "my_manager.h"
+#include "my_storage.h"
+#include "my_solver.h"
+#include "producer.h"
+#include "consumer.h"
 
 class ConsoleLogger : public Logger {
     protected:
@@ -11,42 +14,46 @@ class ConsoleLogger : public Logger {
 
 
 int main() {
-    static constexpr unsigned num_producers = 3;
-    static constexpr unsigned num_consumers = 2;
-    static constexpr size_t tasks_per_producer = 5;
+    static constexpr unsigned num_producers = 10;
+    static constexpr unsigned num_consumers = 4;
+    static constexpr size_t tasks_per_producer = 10;
     static ConsoleLogger logger;
 
-    MyManager manager(num_producers, 
-        num_consumers, tasks_per_producer, logger);
+    using Producer = Producer<Task, Ticket, Result>;
+    using Consumer = Consumer<Task, Ticket, Result>;
+    using Storage = MyStorage;
+
+    Storage storage;
+    EquationSolver solver;
+
+    std::deque<Producer> producers_;
+    std::deque<Consumer> consumers_;
+    std::vector<std::thread> producers_threads_;
+    std::vector<std::thread> consumers_threads_;
+
+    producers_threads_.reserve(num_producers);
+    for(unsigned int i = 0u; i < num_producers; ++i) {
+        auto& producer = producers_.emplace_back(storage, i, tasks_per_producer, logger);
+        producers_threads_.emplace_back(&Producer::Produce, &producer);
+    }
+
+    consumers_threads_.reserve(num_consumers);
+    for(unsigned int i = 0u; i < num_consumers; ++i) {
+        auto& consumer = consumers_.emplace_back(storage, solver, i, logger);
+        consumers_threads_.emplace_back(&Consumer::Consume, &consumer);
+    }
+
 
     std::this_thread::sleep_for(std::chrono::seconds(5)); // Giving time for consumers and producers
-    manager.Stop();
+
+    for(auto& p : producers_)
+        p.Stop();
+    for(auto& c : consumers_)
+        c.Stop();
+
+    for(auto& thread : producers_threads_)
+        thread.join();
+
+    for(auto& thread : consumers_threads_)
+        thread.join();
 }
-
-
-
-// int main() {
-//     static constexpr unsigned num_producers = 3;
-//     static constexpr unsigned num_consumers = 2;
-//     static constexpr size_t tasks_per_producer = 5;
-//     static ConsoleLogger logger;
-
-//     ThreadPool pool(num_producers, num_consumers, tasks_per_producer, logger);
-
-//     std::this_thread::sleep_for(std::chrono::seconds(5)); // Giving time for consumers and producers
-//     pool.Stop();
-
-//     // example of getting results
-//     for (unsigned i = 0; i < num_producers; ++i) {
-//         for (size_t j = 0; j < tasks_per_producer; ++j) {
-//             int taskId = i * tasks_per_producer + j; // Уникальный идентификатор задачи
-//             const auto result = pool.GetResult(taskId);
-//             if (result) {
-//                 logger << "Retrieved cached result for task " 
-//                           << taskId << ": " << *result << std::endl;
-//             } else {
-//                 logger << "No cached result for task " << taskId << std::endl;
-//             }
-//         }
-//     }
-// }

@@ -12,10 +12,14 @@ public:
     using ValueType = Value;
     using ValueConstRef = const ValueType&;
 
-    std::optional<std::reference_wrapper<const ValueType>> Get(KeyConstRef key) const {
-        std::shared_lock lock(mutex_);
+    std::optional<ValueType> Get(KeyConstRef key) {
+        std::lock_guard lock(mutex_);
+        
         if(const auto it = map_.find(key); it != map_.cend()) {
-            return std::cref(it->second);
+            ValueType res;
+            res = std::move(it->second);
+            map_.erase(it);
+            return res;
         }
 
         return std::nullopt;
@@ -37,6 +41,6 @@ public:
     }
 
 private:
-    std::unordered_map<ValueType, KeyType> map_;
+    std::unordered_map<KeyType, ValueType> map_;
     mutable std::shared_mutex mutex_;
 };

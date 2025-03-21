@@ -3,35 +3,28 @@ autonumber
 
 participant Producer
 participant Consumer
-participant Manager
+participant Storage
+participant Solver
 
-Group Add task (loop)
-    Producer ->> Manager : AddTask
-    return flag (task was added or not)
-    Opt Task was NOT added
-        Producer -> Producer : wait
-    end
+Group Add task
+    Producer ->> Storage : AddTask
+    return ticket
 end
 
-Group Get task (loop)
-    Consumer ->> Manager : GetTask
-    Opt Fail to get task
-        Consumer -> Consumer : wait
-    end
+Group Get task
+    Consumer ->> Storage : GetTask
+    return ticket, task
 end
 
 Group Calculate and Save data
-    Consumer ->> Manager : CalculateTask
-    return answer
+    Consumer ->> Solver : Solve
+    return result
 
-    Consumer ->> Manager : AddValue
+    Consumer ->> Storage : SaveResult
 end
 
-Group Retrieve data from cache (loop)
-    Producer ->> Manager : GetValue
-    return value (null value if there is no value in cache)
-    Opt null value
-        Producer -> Producer : wait
-    end
+Group Retrieve data from cache
+    Producer ->> Storage : GetResult
+    return result
 end
 @enduml

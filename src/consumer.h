@@ -1,34 +1,37 @@
 #pragma once
 
 #include "common.h"
-#include "manager.h"
 
-template<typename TaskId, typename TFunc>
+#include "storage.h"
+#include "solver.h"
+
+template<typename Task_, typename Ticket_, typename Result_>
 class Consumer {
-    using TaskManager = Manager<TaskId, TFunc>;
-    using Task = typename TaskManager::Task;
+    using Storage = Storage<Task_, Ticket_, Result_>;
+    using Solver = Solver<Task_, Result_>;
+    using Task = typename Storage::Task;
+    using Ticket = typename Storage::Ticket;
+    using Result = typename Storage::Result;
 public:
-    Consumer(TaskManager& manager, int id, Logger& logger) 
-        : manager_(manager)
+    Consumer(Storage& storage, Solver& solver, int id, Logger& logger) 
+        : storage_(storage)
+        , solver_(solver)
         , consumer_id_(id)
         , logger_(logger) { }
 
     void Consume() {
-        while( running_ || manager_.HasTask()) {
-            const auto task = manager_.GetTask();
-            if(!task) {
-                little_sleep(SLEEP_TIME);
-                continue;
-            }
-            logger_ << "Consumer " << consumer_id_ 
-                << " Get task " << task->GetId() << std::endl;
-                
-            const auto res = manager_.CalculateTask(*task);
-            manager_.SaveResult(task->GetId(), res);
+        while( running_ || storage_.HasTask()) {
+            const auto [ticket, task] = storage_.GetTask();
 
             logger_ << "Consumer " << consumer_id_ 
-                << " save result " << res
-                << " of task " << task->GetId() << std::endl;
+                << " Get task " << ticket << " " 
+                << task.at(0) << ", " << task.at(1) << ", " << task.at(2) << std::endl;
+                
+            const auto res = solver_.Solve(task);
+            storage_.SaveResult(ticket, res);
+
+            logger_ << "Consumer " << consumer_id_ 
+                << " save result of task " << ticket << std::endl;
         };
         logger_ << "Consumer " << consumer_id_ 
                     << " exiting! " << std::endl;
@@ -38,7 +41,8 @@ public:
         running_ = false;
     }
 private:
-    TaskManager& manager_;
+    Storage& storage_;
+    Solver& solver_;
     int consumer_id_;
     Logger& logger_;
     bool running_{true};
